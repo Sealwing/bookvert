@@ -2,6 +2,8 @@
   (:require [clojure.string :as string]))
 
 
+;; PARSING
+
 (defn gap-or-line [cleaned-line]
   (if (= (set cleaned-line) #{\-})
       [:gap ""]
@@ -28,3 +30,18 @@
   (map (fn [grouped-lines] (list (ffirst grouped-lines)
                                  (map last grouped-lines)))
        (split-by-empty (map mark-line lines))))
+
+
+;; FILE READING
+
+(defn extract-filename-wo-ext [file]
+  (let [filename (.getName file)]
+    (string/join (first (split-at (string/index-of filename ".md")
+                                  filename)))))
+
+(defn parse-md-files [directory]
+  (->>  (file-seq directory)
+        (filter (fn [file] (string/ends-with? file ".md")))
+
+        (map (fn [file] (list (extract-filename-wo-ext file)
+                              (lines-to-blocks (string/split-lines (slurp file))))))))
